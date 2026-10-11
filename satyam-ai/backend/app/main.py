@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.api.routes import analyze, auth, health, uploads
+from app.api.routes import analyze, auth, feedback, health, uploads
 from app.core.config import get_settings
 from app.db.database import init_db
 
@@ -38,6 +38,7 @@ app.include_router(health.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
 app.include_router(uploads.router, prefix="/api")
 app.include_router(analyze.router, prefix="/api")
+app.include_router(feedback.router, prefix="/api")
 
 
 @app.exception_handler(Exception)

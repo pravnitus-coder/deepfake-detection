@@ -1,9 +1,10 @@
-"""SQLite storage (plain sqlite3 with foreign keys, WAL mode, and connection isolation). Original media is never stored."""
 import json
 import os
 import pathlib
 import sqlite3
+import uuid
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from app.core.config import get_settings
 
 SCHEMA = """
@@ -95,6 +96,23 @@ CREATE TABLE IF NOT EXISTS upload_chunks(
     stored_at TEXT NOT NULL,
     PRIMARY KEY(upload_id, chunk_index)
 );
+
+CREATE TABLE IF NOT EXISTS feedback(
+    id TEXT PRIMARY KEY,
+    user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+    name TEXT,
+    role TEXT,
+    liked TEXT,
+    confusing TEXT,
+    worked_as_expected TEXT,
+    feature_to_improve TEXT,
+    bugs TEXT,
+    rating INTEGER NOT NULL,
+    suggestions TEXT,
+    consent_to_publish INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_created_at ON feedback(created_at DESC);
 """
 
 
@@ -194,3 +212,46 @@ def save_report(rep_id: str, inv_id: str, created_at: str, report: dict):
             "INSERT INTO reports(id, investigation_id, created_at, report_json) VALUES(?,?,?,?)",
             (rep_id, inv_id, created_at, json.dumps(report)),
         )
+
+
+def save_feedback(data: dict, user_id: str | None = None) -> str:
+    feed_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    with conn() as c:
+        c.execute(
+            """INSERT INTO feedback(id, user_id, name, role, liked, confusing, worked_as_expected,
+                                   feature_to_improve, bugs, rating, suggestions, consent_to_publish, created_at)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                feed_id,
+                user_id,
+                data.get("name") or None,
+                data.get("role") or None,
+                data.get("liked") or "",
+                data.get("confusing") or "",
+                data.get("worked_as_expected") or "",
+                data.get("feature_to_improve") or "",
+                data.get("bugs") or "",
+                int(data["rating"]),
+                data.get("suggestions") or "",
+                1 if data.get("consent_to_publish") else 0,
+                now,
+            ),
+        )
+    return feed_id
+
+
+def list_feedback(limit: int = 50) -> list[dict]:
+    with conn() as c:
+        rows = c.execute(
+            """SELECT id, user_id, name, role, liked, confusing, worked_as_expected,
+                      feature_to_improve, bugs, rating, suggestions, consent_to_publish, created_at
+               FROM feedback ORDER BY created_at DESC LIMIT ?""",
+            (limit,),
+        ).fetchall()
+    cols = [
+        "id", "user_id", "name", "role", "liked", "confusing", "worked_as_expected",
+        "feature_to_improve", "bugs", "rating", "suggestions", "consent_to_publish", "created_at",
+    ]
+    return [{k: (bool(v) if k == "consent_to_publish" else v) for k, v in zip(cols, row)} for row in rows]
+

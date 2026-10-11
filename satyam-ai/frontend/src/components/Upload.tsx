@@ -305,19 +305,35 @@ export default function Upload({ onDone, userId, health }: {
   const total = status?.total_chunks ?? 0;
   const completed = confirmed.size;
   const remaining = Math.max(0, total - completed);
-  const percent = file && status ? Math.min(99, status.confirmed_bytes / file.size * 100) : 0;
+  const percent = file && status ? Math.min(99, (status.confirmed_bytes / file.size) * 100) : 0;
   const etaSeconds = speed > 0 && file && status ? Math.max(0, file.size - status.confirmed_bytes) / speed : null;
+  const formattedSpeed = speed >= 1048576 ? `${(speed / 1048576).toFixed(2)} MB/s` : speed > 0 ? `${(speed / 1024).toFixed(0)} KB/s` : null;
 
   return (
     <div className="upload-container">
-      {!file && <div className="media-kind-tabs" role="tablist" aria-label="Choose media type">
-        {(["image", "video", "audio"] as const).map((type) => (
-          <button key={type} type="button" role="tab" aria-selected={selectedKind === type}
-            className={selectedKind === type ? "active" : ""} onClick={() => { setSelectedKind(type); setError(""); }}>
-            {type[0].toUpperCase() + type.slice(1)}
-          </button>
-        ))}
-      </div>}
+      {!file && (
+        <div className="mb-4">
+          <div className="media-kind-tabs" role="tablist" aria-label="Choose media type">
+            {(["image", "video", "audio"] as const).map((type) => (
+              <button
+                key={type}
+                type="button"
+                role="tab"
+                aria-selected={selectedKind === type}
+                className={selectedKind === type ? "active" : ""}
+                onClick={() => { setSelectedKind(type); setError(""); }}
+              >
+                {type[0].toUpperCase() + type.slice(1)}
+              </button>
+            ))}
+          </div>
+          <p className="text-center text-[11px] text-muted">
+            {selectedKind === "image" && "Supported: JPG, JPEG, PNG, WebP · Max 10 MB · Validated by magic byte signature"}
+            {selectedKind === "video" && "Supported: MP4, MOV, AVI, WebM · Max 50 MB · Sampled frame inspection up to 60s"}
+            {selectedKind === "audio" && "Supported: WAV, MP3, M4A, AAC, FLAC, OGG · Max 30 MB · Waveform & segment windowing"}
+          </p>
+        </div>
+      )}
       <div
         onDragOver={(event) => { event.preventDefault(); setDrag(true); }}
         onDragLeave={() => setDrag(false)}
@@ -325,30 +341,53 @@ export default function Upload({ onDone, userId, health }: {
         className={`upload-dropzone ${drag ? "is-dragging" : ""}`}>
         {!file && <>
           <div className="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></svg></div>
-          <h2>{phase === "validating" ? "Validating file…" : `Drop your ${selectedKind} here`}</h2>
-          <p className="upload-help">{selectedKind === "image" ? "JPG, PNG or WebP" : selectedKind === "video" ? "MP4, MOV, AVI or WebM" : "WAV, MP3, M4A, AAC, FLAC or OGG"} · Max {LIMITS[selectedKind]} MB · Chunked uploads can resume after interruptions.</p>
-          <div className="upload-action"><Btn disabled={phase === "validating"} onClick={() => input.current?.click()}>Choose media</Btn></div>
+          <h2>{phase === "validating" ? "Validating file signature…" : `Drop your ${selectedKind} here`}</h2>
+          <p className="upload-help">
+            Drag and drop or select a file to begin tamper verification. Resumable chunked upload protects against network drops.
+          </p>
+          <div className="upload-action"><Btn disabled={phase === "validating"} onClick={() => input.current?.click()}>Choose {selectedKind} file</Btn></div>
         </>}
         {file && <div className="space-y-4">
-          {kind === "image" ? <img src={url} alt="Preview of the selected image" className="mx-auto max-h-72 rounded-2xl" />
+          {kind === "image" ? <img src={url} alt="Preview of the selected image" className="mx-auto max-h-72 rounded-2xl border border-[#2a3456]" />
             : kind === "audio" ? <audio src={url} controls className="mx-auto w-full max-w-md" onLoadedMetadata={(event) => setDur(event.currentTarget.duration)} />
-            : <video src={url} controls className="mx-auto max-h-72 rounded-2xl" onLoadedMetadata={(event) => setDur(event.currentTarget.duration)} />}
-          <p className="text-sm text-muted">{file.name} · {kind} · {mb(file.size)}{dur ? ` · ${dur.toFixed(1)} s` : ""}</p>
-          <p className="text-xs text-muted">Connection: {online ? "Online (server reachability is checked per request)" : "Offline"} · {phase.replace(/_/g, " ")}</p>
-          {status && <div role="status" aria-live="polite">
-            <div className="h-3 overflow-hidden rounded-full bg-violet-soft"><div className="h-full bg-violet transition-all" style={{ width: `${phase === "complete" ? 100 : percent}%` }} /></div>
-            <p className="mt-2 text-sm font-bold">
-              {phase === "verifying" ? "Verifying assembled file and SHA-256…" :
-                phase === "analyzing" ? "File verified. Running media analysis…" :
-                  phase === "complete" ? "Upload and analysis complete." : `${Math.floor(percent)}% · ${completed}/${total} chunks confirmed · ${remaining} remaining`}
+            : <video src={url} controls className="mx-auto max-h-72 rounded-2xl border border-[#2a3456]" onLoadedMetadata={(event) => setDur(event.currentTarget.duration)} />}
+          <div className="rounded-xl border border-[#232b45] bg-[#12172a] p-3 text-xs">
+            <p className="font-semibold text-white">{file.name}</p>
+            <p className="mt-0.5 text-muted">
+              <span className="uppercase font-mono text-[11px] text-cyan-300">{kind}</span> · {mb(file.size)}
+              {dur ? ` · ${dur.toFixed(1)} seconds duration` : ""}
             </p>
-            <p className="text-xs text-muted">{status.confirmed_bytes.toLocaleString()} / {file.size.toLocaleString()} bytes confirmed
-              {speed > 0 ? ` · ${(speed / 1024).toFixed(0)} KB/s` : ""}
-              {etaSeconds !== null && Number.isFinite(etaSeconds) ? ` · about ${Math.ceil(etaSeconds)} s remaining` : ""}
-              {retryCount ? ` · ${retryCount} retries` : ""}</p>
+            <p className="mt-1 text-[11px] text-muted">
+              State: <span className="font-mono text-ink capitalize">{phase.replace(/_/g, " ")}</span> · Connectivity: {online ? "Online" : "Offline"}
+            </p>
+          </div>
+          {status && <div role="status" aria-live="polite" className="rounded-xl border border-[#232b45] bg-[#101424] p-3.5 text-left">
+            <div className="flex items-center justify-between text-xs font-bold text-white mb-2">
+              <span>
+                {phase === "verifying" ? "Verifying assembled file & SHA-256…" :
+                  phase === "analyzing" ? "Analyzing multimodal forensic signals…" :
+                    phase === "complete" ? "Analysis complete." :
+                      `Chunk ${completed} of ${total} (${Math.floor(percent)}%)`}
+              </span>
+              <span className="font-mono text-violet">{Math.floor(percent)}%</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-[#1e253e]">
+              <div
+                className="h-full bg-gradient-to-r from-violet to-cyan-400 transition-all duration-300"
+                style={{ width: `${phase === "complete" ? 100 : percent}%` }}
+              />
+            </div>
+            <div className="mt-2.5 flex flex-wrap items-center justify-between gap-1 text-[11px] text-muted font-mono">
+              <span>{status.confirmed_bytes.toLocaleString()} / {file.size.toLocaleString()} bytes</span>
+              <div className="flex items-center gap-2">
+                {formattedSpeed && <span>{formattedSpeed}</span>}
+                {etaSeconds !== null && Number.isFinite(etaSeconds) && <span>~{Math.ceil(etaSeconds)}s left</span>}
+                {retryCount > 0 && <span className="text-amber-400">({retryCount} retries)</span>}
+              </div>
+            </div>
           </div>}
-          {phase === "connection_lost" && <p className="rounded-xl bg-[#FFE0A3] p-3 text-sm font-bold text-[#6B3A00]">Connection interrupted. Your confirmed upload progress is saved and will resume when connectivity returns.</p>}
-          {!online && <p className="rounded-xl bg-[#FFE0A3] p-3 text-sm font-bold text-[#6B3A00]">You appear offline. Confirmed chunks are preserved; the server will be checked before resuming.</p>}
+          {phase === "connection_lost" && <p className="rounded-xl bg-[#FFE0A3] p-3 text-sm font-bold text-[#6B3A00]">Connection interrupted. Your confirmed upload progress is saved and will resume automatically when connectivity returns.</p>}
+          {!online && <p className="rounded-xl bg-[#FFE0A3] p-3 text-sm font-bold text-[#6B3A00]">You appear offline. Confirmed chunks are preserved; the server will be verified before resuming.</p>}
           {health?.upload_simulation_enabled && phase === "idle" && <fieldset className="grid gap-2 rounded-xl border border-[#655b91] p-3 text-left text-xs">
             <legend className="px-2 font-bold text-violet">Development-only network simulation</legend>
             <label>Failure mode <select className="ml-2 rounded bg-ground p-1" value={simulation} onChange={(event) => setSimulation(event.target.value as typeof simulation)}>

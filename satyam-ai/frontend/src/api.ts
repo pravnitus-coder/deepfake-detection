@@ -162,3 +162,33 @@ export async function cancelUpload(uploadId: string) {
   const response = await apiFetch(`/api/uploads/${encodeURIComponent(uploadId)}`, { method: "DELETE" });
   if (!response.ok) return err(response);
 }
+
+export interface FeedbackSubmission {
+  name?: string;
+  role?: "Student" | "Developer" | "Researcher" | "Journalist" | "Other";
+  rating: number;
+  worked_as_expected?: "yes" | "partially" | "no";
+  liked?: string;
+  confusing?: string;
+  feature_to_improve?: string;
+  bugs?: string;
+  suggestions?: string;
+  consent_to_publish?: boolean;
+}
+
+export interface FeedbackResponse {
+  id: string;
+  message: string;
+  created_at: string;
+}
+
+export async function submitFeedback(data: FeedbackSubmission): Promise<FeedbackResponse> {
+  const response = await apiFetch("/api/feedback", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) return err(response);
+  return response.json();
+}
+
