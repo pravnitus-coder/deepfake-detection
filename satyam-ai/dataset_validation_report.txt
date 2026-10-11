@@ -1,0 +1,62 @@
+SATYAM AI dataset validation report
+Generated: 2026-10-11T08:09:05+00:00
+Manifest: C:\Users\pravn\Downloads\satyam-ai\satyam-ai\dataset\annotations.csv
+Manifest rows read: 0
+Valid unique output records: 0
+Requested target: 10000
+Shortfall to target: 10000
+Status: INCOMPLETE; no records were fabricated
+Exact duplicate rows discarded: 0
+Conflicting-label duplicate hashes excluded: 0
+
+Validation checks:
+  Unique IDs/hashes, file paths, label consistency, and split leakage: N/A (no records)
+  Feature reproducibility across independent reruns: NOT TESTED
+  Near-duplicate detection: NOT RUN
+
+Input limitation: no annotation rows or verified local media samples were supplied.
+
+Records by media type (target):
+  image: 0 / 4000
+  video: 0 / 3000
+  audio: 0 / 3000
+
+Records by modality and authenticity label:
+  image, AUTHENTIC: 0
+  image, MANIPULATED: 0
+  image, AI_GENERATED: 0
+  image, UNKNOWN: 0
+  video, AUTHENTIC: 0
+  video, MANIPULATED: 0
+  video, AI_GENERATED: 0
+  video, UNKNOWN: 0
+  audio, AUTHENTIC: 0
+  audio, MANIPULATED: 0
+  audio, AI_GENERATED: 0
+  audio, UNKNOWN: 0
+
+Records by split:
+  train: 0 (0.00%)
+  validation: 0 (0.00%)
+  test: 0 (0.00%)
+
+Missing-value counts (blank output fields):
+  No data rows; all feature/count fields are not applicable.
+
+Quality checks and limitations:
+  Labels are accepted only from the manifest; filenames are never used to infer ground truth.
+  Exact SHA-256 duplicates are removed; conflicting labels for one hash exclude that hash.
+  Near-duplicate detection is not run. Supply split_group for related originals/derivatives to prevent leakage.
+  Split is deterministic by split_group; if omitted, exact hash is used and related media may leak across splits.
+  Probability, calibration, temporal, lip-sync, voice-cloning, and manipulation scores remain blank without validated compatible models.
+  Audio energy/spectral statistics are measurements, not evidence that speech is synthetic.
+  CSV labels and measurements are separate; do not include labels, paths, hashes, source IDs, or split metadata as model features.
+  Processing uses the locally installed Pillow, OpenCV, NumPy, and SoundFile versions; record environment versions for strict reproducibility.
+
+Public candidate sources reviewed; none were downloaded or used in this output:
+  FaceForensics++: https://github.com/ondyari/FaceForensics (request/access workflow; manipulated facial videos, not fully-AI-generated class).
+  DFDC: https://ai.meta.com/datasets/dfdc/ (AWS account/access conditions; authentic and manipulated videos).
+  Celeb-DF: https://github.com/yuezunli/celeb-deepfakeforensics (access form and terms of use; original and synthesized videos).
+  GenImage: https://github.com/GenImage-Dataset/GenImage (AI-generated and natural image benchmark; verify applicable terms before use).
+  WaveFake: https://github.com/RUB-SysSec/WaveFake (synthetic audio benchmark; verify dataset license/conditions before use).
+  Confirm each dataset's current license, access approval, source annotations, and redistribution rights before processing or sharing.

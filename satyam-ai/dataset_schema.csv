@@ -1,0 +1,63 @@
+﻿column_name,data_type,description
+sample_id,string,Full SHA-256-derived ID; unique after duplicate-hash rejection.
+media_type,enum,"One of image, video, audio."
+file_name,string,Original file name.
+file_path,string,Resolved path to the actual local media file.
+file_extension,string,Lowercase suffix from the actual path.
+file_size_bytes,integer,Actual file size in bytes.
+file_hash_sha256,hex string,SHA-256 of the actual file contents.
+source_dataset,string,Dataset/provenance name supplied by the annotator.
+source_url,URL/string,"Source documentation or record URL, if available."
+license,string,Applicable license or access terms supplied by the annotator.
+split,enum,"Deterministic group split: train, validation, or test."
+split_group,string,Related-source group kept within one split; exact hash fallback if absent.
+authenticity_label,enum,"AUTHENTIC, MANIPULATED, AI_GENERATED, or UNKNOWN; from annotations."
+manipulation_type,string,Source-documented manipulation method/type.
+is_manipulated,boolean/string,"AUTHENTIC=0, MANIPULATED=1, AI_GENERATED=0; blank for UNKNOWN."
+is_fully_ai_generated,boolean/string,AI_GENERATED=1; other known labels=0; blank for UNKNOWN.
+label_source,string,Annotation record or documented provenance; never inferred from filename.
+label_confidence,"float [0,1]",Source-provided confidence; blank if not supplied.
+image_width,integer,Decoded image width in pixels.
+image_height,integer,Decoded image height in pixels.
+color_mode,string,Pillow decoded image color mode.
+mean_brightness,float,Mean 8-bit grayscale intensity.
+contrast_score,float,Standard deviation of 8-bit grayscale intensity.
+blur_score,float,"Variance of Laplacian; descriptive sharpness heuristic, not authenticity evidence."
+jpeg_compression_quality,float,Unavailable: encoded JPEG quality is not reliably recoverable.
+face_count,integer,OpenCV Haar-cascade face count; heuristic and not a manipulation detector.
+face_manipulation_score,float,Unavailable unless a dedicated validated detector is supplied.
+image_ai_generation_score,float,Raw configured model score for configured fake labels; uncalibrated.
+image_model_prediction,string,Top raw label from configured image classifier.
+image_model_name,string,"Configured image model ID, when inference ran."
+video_duration_seconds,float,Decoded container duration (frame count / FPS).
+video_width,integer,Decoded frame width in pixels.
+video_height,integer,Decoded frame height in pixels.
+video_fps,float,Container-reported frames per second.
+video_frame_count,integer,Container-reported total frame count.
+frames_analyzed,integer,Number of sampled video frames successfully decoded.
+suspicious_frame_ratio,"float [0,1]",Share of sampled frames flagged by configured image model; not a video probability.
+temporal_inconsistency_score,float,Unavailable: no temporal detector is implemented.
+lip_sync_anomaly_score,float,Unavailable: no lip-sync detector is implemented.
+video_model_prediction,string,Frame-vote result from configured image model; not a temporal video model.
+video_model_name,string,Configured image model ID used on sampled frames.
+audio_duration_seconds,float,Decoded audio duration in seconds.
+audio_sample_rate,integer,Decoded audio sample rate in Hz.
+audio_channels,integer,Decoded audio channel count.
+audio_codec,string,Decoder-reported container format and subtype.
+rms_energy,float,"Measured root-mean-square amplitude, normalized by decoder sample range."
+zero_crossing_rate,float,Measured fraction of adjacent mono samples changing sign.
+spectral_centroid,float,Mean FFT magnitude-weighted frequency in Hz.
+spectral_bandwidth,float,Mean FFT magnitude-weighted bandwidth in Hz.
+synthetic_speech_score,float,Unavailable unless a validated detector with this exact output exists.
+voice_cloning_score,float,Unavailable unless a validated voice-cloning detector exists.
+audio_manipulation_score,float,Unavailable unless a validated audio-manipulation detector exists.
+audio_model_prediction,string,Top raw label from configured audio classifier; not mapped to authenticity.
+audio_model_name,string,"Configured audio model ID, when inference ran."
+authentic_probability,"float [0,1]",Only populated by a validated compatible three-class model; blank here.
+manipulated_probability,"float [0,1]",Only populated by a validated compatible three-class model; blank here.
+ai_generated_probability,"float [0,1]",Only populated by a validated compatible three-class model; blank here.
+prediction_confidence,"float [0,1]",Only populated by a calibrated and documented model; blank here.
+evidence_summary,string,Short summary of measured features and actual model outputs.
+analysis_status,enum,"completed, partial, or failed for the requested extraction."
+analysis_timestamp,ISO-8601 UTC,Time this pipeline processed the media.
+feature_notes,string,Unavailable/unsupported feature reasons and detector caveats.

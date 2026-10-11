@@ -1,0 +1,9 @@
+﻿summary_type,media_type,authenticity_label,manipulation_type,record_count
+MEDIA_TYPE,image,,,0
+MEDIA_TYPE,video,,,0
+MEDIA_TYPE,audio,,,0
+AUTHENTICITY_LABEL,,AUTHENTIC,,0
+AUTHENTICITY_LABEL,,MANIPULATED,,0
+AUTHENTICITY_LABEL,,AI_GENERATED,,0
+AUTHENTICITY_LABEL,,UNKNOWN,,0
+TOTAL,,,,0
